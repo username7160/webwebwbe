@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>bug shaker central</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    
+    <!-- Intro Sequence (Untouched) -->
+    <div class="container-main">
+      <img src="https://uploads.onecompiler.io/44hyjn3tm/44zbfrz2z/moth-icon.png" alt="start" class="start-btn" id="start-btn">
+      <img src="https://uploads.onecompiler.io/44hyjn3tm/44zbfrz2z/brommb.png" alt="bromm" class="bromm-image">
+      <div class="static-overlay"></div>
+      <h1 class="text-00" id="dialogue-text"></h1>
+      <div class="menu-buttons">
+        <button class="menu-btn" id="continue-btn" disabled>continue</button>
+      </div>
+
+      <audio id="intro-sound" src="https://raw.githubusercontent.com/username7160/webwebwbe/main/Breath.mp3" preload="auto"></audio>
+      <audio id="talk-blip" src="https://raw.githubusercontent.com/username7160/webwebwbe/main/talk.mp3" preload="auto"></audio>
+    </div>
+
+    <!-- Main Site Layout -->
+    <main id="main-site-content" class="hidden-site">
+      
+      <!-- The main reference wrapper with the 40px left border -->
+      <div id="wrapper">
+        <div id="flexrayout">
+
+          <!-- ITEM 1: Title and Ticker (Top Row) -->
+          <div id="item1">
+            <h1 id="sitetitle">placeholder.moe</h1>
+            <div class="ticker-bar">
+              <div class="ticker-track">
+                <!-- Each .ticker-set repeats the phrase a few times so a single
+                     set is guaranteed wider than the bar — that's what makes
+                     the -50% loop seamless with no blank gap at the restart. -->
+                <div class="ticker-set">
+                  <span>welcome to bug shaker central ── system operational ── more soon ──</span>
+                  <span>welcome to bug shaker central ── system operational ── more soon ──</span>
+                  <span>welcome to bug shaker central ── system operational ── more soon ──</span>
+                </div>
+                <div class="ticker-set" aria-hidden="true">
+                  <span>welcome to bug shaker central ── system operational ── more soon ──</span>
+                  <span>welcome to bug shaker central ── system operational ── more soon ──</span>
+                  <span>welcome to bug shaker central ── system operational ── more soon ──</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ITEM 2: Modular CSS Grid (Right Column, Order 2) -->
+          <div id="item2">
+            
+            <nav class="section" id="about">
+              <h2 class="highlight">
+                <a href="about.html">about / <small>about me</small> >></a>
+              </h2>
+              <div>
+                <h3 class="section-title">hello!</h3>
+                <p>Welcome! I am the administrator of bug shaker central.</p>
+                <p></p>
+              </div>
+            </nav>
+
+            <nav class="section" id="journal">
+              <h2 class="highlight">
+                <a href="journal.html">journal / <small>logs</small> >></a>
+              </h2>
+              <div>
+                <h3 class="section-title">recent updates</h3>
+                <p>> 2026/10/01 "Initial layout established."</p>
+                <p>> 2026/09/28 "Server infrastructure configured."</p>
+              </div>
+            </nav>
+
+            <!-- Spans multiple rows on the right side of the grid -->
+            <nav class="section" id="gallery">
+              <h2 class="highlight">
+                <a href="gallery.html">gallery / <small>images</small> >></a>
+              </h2>
+              
+              <!-- Collapsible reference folder structure -->
+              <details open>
+                <summary>recent uploads</summary>
+                <!-- Small thumbnail previews instead of filenames.
+                     Swap these src values for your real upload thumbnails. -->
+                <div class="summary-boxes gallery-preview-grid">
+                  <a href="#"><img src="https://uploads.onecompiler.io/44hyjn3tm/44zbfrz2z/moth-icon.png" alt="asset_01 preview"></a>
+                  <a href="#"><img src="https://uploads.onecompiler.io/44hyjn3tm/44zbfrz2z/brommb.png" alt="asset_02 preview"></a>
+                  <a href="#"><img src="https://uploads.onecompiler.io/44hyjn3tm/44zbfrz2z/moth-icon.png" alt="asset_03 preview"></a>
+                </div>
+              </details>
+
+              <!-- Small music player — track list lives in script.js (playlist array) -->
+              <div class="music-player" id="music-player">
+                <div class="player-track-info" id="player-track-title">loading…</div>
+                <div class="player-progress-row">
+                  <div class="player-progress-bar" id="player-progress-bar">░░░░░░░░░░░░░░░░░░░░</div>
+                  <span class="player-time" id="player-time">0:00 / 0:00</span>
+                </div>
+                <div class="player-controls">
+                  <div class="player-group">
+                    <button type="button" class="player-btn" id="player-prev" aria-label="previous track">⏮</button>
+                    <button type="button" class="player-btn" id="player-playpause" aria-label="play">▶</button>
+                    <button type="button" class="player-btn" id="player-next" aria-label="next track">⏭</button>
+                  </div>
+                  <div class="player-group player-volume-group">
+                    <button type="button" class="player-btn" id="player-vol-down" aria-label="decrease volume">−</button>
+                    <button type="button" class="player-btn" id="player-vol-up" aria-label="increase volume">+</button>
+                    <span class="player-volume" id="player-volume">25%</span>
+                  </div>
+                </div>
+                <audio id="player-audio" preload="metadata"></audio>
+              </div>
+
+            </nav>
+            
+          </div>
+
+          <!-- ITEM 3: Left Sidebar (Left Column, Order 1) -->
+          <div id="item3">
+            <nav class="section" id="links">
+              
+              <div>
+                <h3 class="section-title">contact</h3>
+                <p>
+                  <!-- Swap data-copy-value for your real discord username/name -->
+                  <button type="button" class="copy-btn" data-copy-value="brommbaer">discord</button>
+                </p>
+                <p><a href="#">matrix</a></p>
+                <br>
+                <h3 class="section-title">site information</h3>
+                <p>░ views: <span id="views-count">…</span></p>
+                <p>░ last update: <span id="last-update-text">…</span></p>
+              </div>
+            </nav>
+          </div>
+
+        </div> <!-- /#flexrayout -->
+      </div> <!-- /#wrapper -->
+
+    </main>
+
+    <!-- Small floating toast shown after a successful copy -->
+    <div id="copy-toast" role="status" aria-live="polite"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

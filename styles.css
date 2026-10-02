@@ -1,0 +1,692 @@
+/* ==========================================================================
+   1. ROOT VARIABLES & GLOBAL RESET
+   ========================================================================== */
+:root {
+  --bg-color-dark: #000;
+  --bg-color-light: #fff;
+  --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'Courier New', monospace;
+  --transition-speed: 2s;
+  
+  /* Reference Palette */
+  --color-main: #fff;
+  --color-sub: #000;
+  --color-secondary: #888;
+  --color-tertiary: #ccc;
+
+  /* 2px checkerboard dither pattern — classic "dithered selection" look
+     (think Win95/pixel UI). Opaque version, currently unused directly but
+     kept available for future non-text hover states. */
+  --dither-pattern:
+    linear-gradient(45deg, var(--color-sub) 25%, transparent 25%, transparent 75%, var(--color-sub) 75%) 0 0 / 4px 4px,
+    linear-gradient(45deg, var(--color-sub) 25%, var(--color-main) 25%, var(--color-main) 75%, var(--color-sub) 75%) 2px 2px / 4px 4px;
+
+  /* Translucent variant — half the cells are semi-dark, half fully
+     transparent, so it can sit as an overlay on top of an image instead
+     of replacing a background entirely. */
+  --dither-overlay:
+    linear-gradient(45deg, rgba(0, 0, 0, 0.5) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.5) 75%) 0 0 / 4px 4px,
+    linear-gradient(45deg, transparent 25%, rgba(0, 0, 0, 0.5) 25%, rgba(0, 0, 0, 0.5) 75%, transparent 75%) 2px 2px / 4px 4px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-color-dark);
+}
+
+body.skip-intro,
+body:has(#main-site-content.visible) {
+  display: block;
+  height: auto;
+  background-color: var(--color-main);
+  animation: none;
+}
+
+/* ==========================================================================
+   2. KEYFRAME ANIMATIONS
+   ========================================================================== */
+@keyframes bgIntro {
+  0%   { background-color: var(--bg-color-dark); }
+  60%  { background-color: var(--bg-color-dark); }
+  100% { background-color: var(--bg-color-light); }
+}
+
+@keyframes staticFlicker {
+  0%   { transform: scale(1) translate(0, 0); }
+  50%  { transform: scale(1.05) translate(-1%, 5%); }
+  100% { transform: scale(2) translate(30%, 10%); }
+}
+
+@keyframes staticFade {
+  0%   { opacity: 0; }
+  100% { opacity: 0.85; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* ==========================================================================
+   3. INTRO SEQUENCE & DIALOGUE BOX
+   ========================================================================== */
+.container-main {
+  width: 70vh;
+  height: 60vh;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+  background-color: transparent;
+  transition: border-color 2.5s ease-in-out, opacity 1.5s ease-in-out;
+  margin: 20vh auto;
+}
+
+.bromm-image,
+.text-00,
+.menu-buttons {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-speed) ease-in-out;
+}
+
+.bromm-image {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: auto;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.static-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); 
+}
+
+.text-00 {
+  position: relative;
+  z-index: 3;
+  margin-left: 45%;
+  margin-top: 10vh;
+  margin-right: 3vh;
+  padding-bottom: 6vh;
+  font-size: 2vh;
+  font-family: var(--font-mono);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #000;
+}
+
+.text-00.finished::after {
+  content: " <";
+  display: inline-block;
+  animation: blink 1.8s steps(1) infinite;
+}
+
+.menu-buttons {
+  position: absolute;
+  right: 2vh;
+  bottom: 2vh;
+  z-index: 4;
+}
+
+.menu-btn {
+  width: 12vh;
+  height: 4vh;
+  font-size: 1.6vh;
+  font-family: var(--font-mono);
+  border: 2px solid #000;
+  cursor: pointer;
+  background-color: transparent;
+}
+
+.menu-btn:hover { background-color: #eee; }
+
+.start-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  width: 12vh;
+  height: auto;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.1s ease, transform 0.2s ease;
+}
+
+.start-btn:hover {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.0);
+}
+
+/* ==========================================================================
+   4. INTRO STATE TOGGLES
+   ========================================================================== */
+body.started { animation: bgIntro 8s ease-in-out forwards; }
+.container-main.started { border-color: #000; }
+.container-main.started .bromm-image,
+.container-main.started .text-00,
+.container-main.started .menu-buttons { opacity: 1; pointer-events: auto; }
+.bromm-image.fade-out { opacity: 0 !important; }
+.static-overlay.fade-out { animation: staticFlicker 0.08s steps(2) infinite, staticFade 2.5s ease-in-out forwards; }
+.start-btn.hidden { display: none; }
+.container-main.fade-away { opacity: 0; pointer-events: none; }
+
+/* ==========================================================================
+   5. MAIN WEBSITE WRAPPER 
+   ========================================================================== */
+.hidden-site {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 2s ease-in-out;
+}
+
+.hidden-site.visible {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+  width: 100%;
+  min-height: 100vh;
+  padding: 5vh 20px; /* Creates spacing outside the box so it floats in the center */
+}
+
+#wrapper {
+  width: 100%;
+  max-width: 900px; 
+  margin: 0 auto; 
+  padding: 30px; /* Creates breathing room inside the dotted box */
+  box-sizing: border-box;
+  
+  border: 2px dotted var(--color-sub); /* The dotted containment box */
+  
+  /* Dense Typography */
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.2;
+  letter-spacing: -0.05em; 
+  color: var(--color-sub);
+  background-color: var(--color-main);
+}
+
+/* ==========================================================================
+   6. FLEX & GRID LAYOUT
+   ========================================================================== */
+#flexrayout {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: 0;
+}
+
+/* ITEM 1: Title Area */
+#item1 {
+  align-self: flex-start;
+  flex: 0 1 100%;
+  margin-bottom: -8px;
+  width: 100%;
+  overflow: hidden; /* clips the ticker strictly to this box's width, no matter #wrapper's padding */
+}
+
+#sitetitle {
+  display: inline-block;
+  color: var(--color-sub);
+  font-size: 2.5rem;
+  margin-top: -2px;
+  margin-left: -2px;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+/* ITEM 2: Modular CSS Grid (The Core Content) */
+#item2 {
+  order: 2; /* Forces this block to the right of item3 */
+  display: grid;
+  grid-template-columns: auto auto; /* Two modular columns */
+  grid-template-rows: auto auto auto auto;
+  gap: 0;
+  grid-auto-flow: dense;
+  margin-left: 5px;
+  flex: 1 1 500px;
+}
+
+/* ITEM 3: Left Sidebar (Links/Info) */
+#item3 {
+  flex: 0 1 200px;
+  order: 1; /* Forces this block left */
+  margin-left: 0;
+}
+
+/* ==========================================================================
+   7. MODULAR GRID COORDINATES
+   ========================================================================== */
+#about     { grid-area: 1 / 1 / 1 / 1; width: 310px; }
+#journal   { grid-area: 2 / 1 / 2 / 1; }
+#works     { grid-area: 3 / 1 / 3 / 1; }
+#gallery   { grid-area: 1 / 2 / 6 / 2; padding-left: 20px;}
+
+/* ==========================================================================
+   8. COMPONENT STYLING
+   ========================================================================== */
+a {
+  color: var(--color-sub);
+  text-decoration: underline;
+  transition: 0.1s linear, background-color 0.1s linear;
+}
+
+/* No background change on hover — keeps link text fully readable.
+   The underline already signals interactivity. */
+
+/* Styled to match the <a> links exactly, but it's a real <button> so it
+   works with click handlers / clipboard access without a dead "#" href */
+.copy-btn {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--color-sub);
+  text-decoration: underline;
+  cursor: pointer;
+  transition: 0.1s linear, background-color 0.1s linear;
+}
+
+/* No background change on hover — same reasoning as the <a> hover above. */
+
+img {
+  image-rendering: pixelated;
+}
+
+.section {
+  display: block;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: dotted 2px var(--color-sub);
+}
+
+.section:last-child {
+  border-bottom: none;
+}
+
+/* The signature inverted block header */
+.highlight {
+  display: inline-block;
+  background-color: var(--color-sub);
+  color: var(--color-main);
+  padding-bottom: 0.5px;
+  padding-right: 3px;
+  line-height: 12px;
+  margin: 1px 0 6px 0;
+  font-size: 1rem;
+  font-weight: normal;
+}
+
+.highlight a {
+  color: var(--color-main);
+  text-decoration: underline;
+}
+
+.highlight:hover { filter: invert(1); }
+
+.section-title {
+  display: inline-block;
+  color: var(--color-main);
+  background-color: var(--color-secondary);
+  font-size: 1rem;
+  font-weight: normal;
+  clip-path: inset(1px 0 1px 0);
+  margin-top: 10px;
+  margin-bottom: 4px;
+}
+
+.section-title::before { content: "⌞"; padding-left: 1px; margin-right: 3px; }
+.section-title::after  { content: "⌝"; margin-left: 3px; }
+
+/* --- Lists & Details (Collapsible Folders) --- */
+details {
+  margin-bottom: 4px;
+}
+
+summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-block;
+  color: var(--color-main);
+  background-color: var(--color-secondary);
+  padding-left: 3px;
+  font-size: 1rem;
+}
+
+summary:hover {
+  color: var(--color-sub);
+  background-color: var(--color-main);
+}
+
+summary::before { content: "+ "; margin-right: 2px; }
+details[open] summary::before { content: "- "; margin-right: 2px; }
+
+.summary-boxes {
+  border-left: dotted 2px var(--color-secondary);
+  padding-left: 10px;
+  margin: 5px 0 5px 5px;
+}
+
+/* Small thumbnail previews for the gallery's "recent uploads" folder,
+   swapped in place of the old plain filename links */
+.gallery-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 48px);
+  gap: 6px;
+}
+
+.gallery-preview-grid a {
+  position: relative;
+  display: block;
+  line-height: 0;
+}
+
+.gallery-preview-grid img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border: 1px solid var(--color-sub);
+  filter: grayscale(100%);
+  transition: filter 0.15s ease;
+}
+
+.gallery-preview-grid a:hover img {
+  filter: grayscale(0%);
+}
+
+/* Dithered texture overlay, shown only on hover — this is the "media
+   element" dither effect, kept off text/buttons for readability. */
+.gallery-preview-grid a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--dither-overlay);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.gallery-preview-grid a:hover::after {
+  opacity: 1;
+}
+
+/* --- Ticker Bar Integration ---
+   Not hardcoded to #wrapper's padding — fills 100% of whatever box it's
+   placed in (currently #item1), so it stays contained automatically.
+
+   Seamless loop: .ticker-track holds two identical .ticker-set groups,
+   each repeating the phrase enough times to be wider than the bar itself.
+   Animating -50% always shifts by exactly one full set's width, and
+   since the next set picks up with identical content, there's never a
+   gap where the track runs out of content before the loop resets. */
+.ticker-bar {
+  width: 100%;
+  box-sizing: border-box;
+
+  overflow: hidden;
+  white-space: nowrap;
+  background: var(--color-sub);
+  padding: 4px 0;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: tickerScroll 18s linear infinite;
+  will-change: transform;
+}
+
+.ticker-set {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.ticker-track span {
+  font-size: 0.8rem;
+  color: var(--color-main);
+  white-space: nowrap;
+  padding-right: 4rem;
+}
+
+@keyframes tickerScroll {
+  from { transform: translateX(0%); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ==========================================================================
+   8c. MUSIC PLAYER — small, flat, matches the rest of the component styling
+   ========================================================================== */
+.music-player {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: dotted 2px var(--color-secondary);
+  font-size: 0.75rem;
+}
+
+.player-track-info {
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ASCII block progress bar — ▒ = played, ░ = unplayed. Text itself renders
+   the fill, no separate bar/overlay elements needed. Sits in a row with
+   the timestamp on its right. */
+.player-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.player-progress-bar {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+  color: var(--color-sub);
+}
+
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Groups buttons so transport (prev/play/next) and volume controls read as
+   two distinct clusters instead of one crowded row */
+.player-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-volume-group {
+  margin-left: 16px;
+}
+
+.player-volume {
+  font-size: 0.7rem;
+  color: var(--color-secondary);
+  min-width: 2.4em;
+  text-align: center;
+}
+
+.player-btn {
+  appearance: none;
+  border: 1px solid var(--color-sub);
+  background: var(--color-main);
+  color: var(--color-sub);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  width: 22px;
+  height: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* No background change on hover — the ▶/⏮/⏭/−/+ glyphs stay fully legible. */
+
+.player-time {
+  font-size: 0.7rem;
+  color: var(--color-secondary);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   8b. COPY TOAST — small floating monochrome notification
+   ========================================================================== */
+#copy-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--color-sub);
+  color: var(--color-main);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--color-main);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 999;
+}
+
+#copy-toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+  animation: toastFloat 1.8s ease-in-out infinite;
+}
+
+@keyframes toastFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+/* ==========================================================================
+   8d. SUBPAGE HEADER — used by gallery.html / about.html / etc.
+   ========================================================================== */
+.subpage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+  border-bottom: dotted 2px var(--color-sub);
+}
+
+.subpage-header nav a {
+  font-size: 0.85rem;
+}
+
+/* ==========================================================================
+   8e. GALLERY PAGE — full grid with captions (gallery.html)
+   ========================================================================== */
+.gallery-page-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.gallery-page-item {
+  margin: 0;
+  padding: 0;
+}
+
+.gallery-page-item a {
+  position: relative;
+  display: block;
+  line-height: 0;
+}
+
+.gallery-page-item img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border: 1px solid var(--color-sub);
+  filter: grayscale(100%);
+  transition: filter 0.15s ease;
+}
+
+.gallery-page-item a:hover img {
+  filter: grayscale(0%);
+}
+
+.gallery-page-item a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--dither-overlay);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.gallery-page-item a:hover::after {
+  opacity: 1;
+}
+
+.gallery-page-item figcaption {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--color-secondary);
+}
+
+/* ==========================================================================
+   9. MEDIA QUERIES (Responsive Stacking)
+   ========================================================================== */
+@media screen and (max-width: 855px) {
+  #item2 { display: block; }
+}
+
+@media screen and (max-width: 768px) {
+  #item1 { order: 0; }
+  #item2 { order: 1; margin-left: 0; }
+  #item3 { order: 2; margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+  #copy-toast.visible {
+    animation: none;
+  }
+}
